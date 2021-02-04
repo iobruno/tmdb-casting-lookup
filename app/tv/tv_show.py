@@ -1,14 +1,12 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from app.casting.casting import Casting
 
 
 @dataclass
 class TVShowDetails:
-    tmdb_id: int
-    imdb_id: str
-    tvdb_id: Optional[str]
+    id: int
     title: str
     original_title: str
     overview: str
@@ -17,11 +15,10 @@ class TVShowDetails:
     genres: List[str]
     seasons: List['TVShowSeason']
     actor_casting: List[Casting]
+    external_ids: Dict[str, str]
 
     def __init__(self, **kwargs):
-        self.tmdb_id = kwargs.get('id')
-        self.imdb_id = kwargs.get('external_ids').get('imdb_id')
-        self.tvdb_id = kwargs.get('external_ids').get('tvdb_id')
+        self.id = kwargs.get('id')
         self.title = kwargs.get('name')
         self.original_title = kwargs.get('original_name')
         self.overview = kwargs.get('overview')
@@ -33,6 +30,7 @@ class TVShowDetails:
                                                     kwargs.get('seasons')))
         self.actor_casting = self.actors_only(casting=map(lambda casting: Casting(**casting),
                                                           kwargs.get('credits').get('cast')))
+        self.external_ids = kwargs.get('external_ids')
 
     def actors_only(self, casting) -> List[Casting]:
         return list(filter(lambda cast: cast.is_an_actor, casting))

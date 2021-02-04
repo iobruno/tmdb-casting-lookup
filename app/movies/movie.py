@@ -1,13 +1,12 @@
 from dataclasses import dataclass
-from typing import List
+from typing import Dict, List
 
 from app.casting.casting import Casting
 
 
 @dataclass
 class MovieDetails:
-    tmdb_id: int
-    imdb_id: str
+    id: int
     title: str
     original_title: str
     overview: str
@@ -16,11 +15,11 @@ class MovieDetails:
     release_date: str
     genres: List[str]
     actor_casting: List[Casting]
+    external_ids: Dict[str, str]
     is_adult: bool
 
     def __init__(self, **kwargs):
-        self.tmdb_id = kwargs.get('id')
-        self.imdb_id = kwargs.get('imdb_id')
+        self.id = kwargs.get('id')
         self.title = kwargs.get('title')
         self.original_title = kwargs.get('original_title')
         self.overview = kwargs.get('overview')
@@ -32,6 +31,7 @@ class MovieDetails:
                                           kwargs.get('genres')))
         self.actor_casting = self.actors_only(casting=map(lambda movie: Casting(**movie),
                                                           kwargs.get('credits').get('cast')))
+        self.external_ids = kwargs.get('external_ids')
 
     def actors_only(self, casting) -> List[Casting]:
         return list(filter(lambda cast: cast.is_an_actor, casting))

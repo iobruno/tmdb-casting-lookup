@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
+from app.casting.casting import Casting
+
 
 @dataclass
 class TVShowDetails:
@@ -11,10 +13,10 @@ class TVShowDetails:
     original_title: str
     overview: str
     original_lang: str
+    poster_img_path: str
     genres: List[str]
     seasons: List['TVShowSeason']
-    actor_casting: List['TVShowCast']
-    is_adult: bool
+    actor_casting: List[Casting]
 
     def __init__(self, **kwargs):
         self.tmdb_id = kwargs.get('id')
@@ -24,16 +26,15 @@ class TVShowDetails:
         self.original_title = kwargs.get('original_name')
         self.overview = kwargs.get('overview')
         self.original_lang = kwargs.get('original_language')
-
-        self.is_adult = kwargs.get('adult')
+        self.poster_img_path = kwargs.get('poster_path')
         self.genres: List[str] = list(map(lambda genre: genre.get('name'),
                                           kwargs.get('genres')))
         self.seasons: List[TVShowSeason] = list(map(lambda season: TVShowSeason(**season),
                                                     kwargs.get('seasons')))
-        self.actor_casting = self.actors_only(casting=map(lambda casting: TVShowCast(**casting),
+        self.actor_casting = self.actors_only(casting=map(lambda casting: Casting(**casting),
                                                           kwargs.get('credits').get('cast')))
 
-    def actors_only(self, casting) -> List['TVShowCast']:
+    def actors_only(self, casting) -> List[Casting]:
         return list(filter(lambda cast: cast.is_an_actor, casting))
 
 
@@ -57,34 +58,3 @@ class TVShowSeason:
     @property
     def release_date(self):
         return self.air_date
-
-
-@dataclass
-class TVShowCast:
-    id: int
-    name: str
-    original_name: str
-    character: str
-    gender: int
-    department: str
-
-    def __init__(self, **kwargs):
-        self.id = kwargs.get('id')
-        self.name = kwargs.get('name')
-        self.original_name = kwargs.get('original_name')
-        self.character = kwargs.get('character')
-        self.profile_img_id = kwargs.get('profile_path')
-        self.gender = kwargs.get('gender')
-        self.department = kwargs.get('known_for_department')
-
-    @property
-    def is_an_actor(self) -> bool:
-        return self.department == 'Acting'
-
-    @property
-    def is_female(self) -> bool:
-        return self.gender == 1
-
-    @property
-    def is_male(self) -> bool:
-        return not self.is_female

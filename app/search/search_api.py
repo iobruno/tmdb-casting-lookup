@@ -15,10 +15,11 @@ class SearchApi:
 
     def query(self, query_string: str, language: str = "pt-br") -> Dict[str, List[SearchResult]]:
         """
-        returns a Dictionary might contain up to 3 keys 'movie', 'person', 'tv'
-        each key containing the list of matches for their respective key
-        :param query_string:
-        :return:
+        :param language: specifies the language for which the 'title' and 'overview'
+                         will be displayed at
+        :param query_string: search by the 'movie title', 'tv show title' or 'celebrity name'
+        :return: a Dictionary might contain up to 3 keys 'movie', 'tv', and 'person'
+                 each key containing the list of matches for their respective key
         """
         multi_search = r.get(self.search_endpoint,
                              params={'query': query_string, 'language': language},
@@ -29,6 +30,10 @@ class SearchApi:
                               for key, val in groupby(search_results, attrgetter('media_type'))}
 
         return grp_search_results
+
+    # TODO: to be implemented
+    def discover(self):
+        NotImplemented("Not yet implemented")
 
     def _parse(self,
                search_results: List[Dict[str, str]],

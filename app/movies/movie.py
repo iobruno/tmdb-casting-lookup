@@ -5,7 +5,7 @@ from typing import List
 @dataclass
 class MovieDetails:
     tmdb_id: int
-    imdb: str
+    imdb_id: str
     title: str
     original_title: str
     overview: str

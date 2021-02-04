@@ -1,7 +1,7 @@
 import os
+import requests as r
 from typing import Dict
 
-import requests as r
 from app.tv.tv_show import TVShowDetails
 
 

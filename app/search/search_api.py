@@ -1,7 +1,6 @@
 import os
-from typing import Dict, List
-
 import requests as r
+from typing import Dict, List
 
 from app.search.search_results import SearchResult
 

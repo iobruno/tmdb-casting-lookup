@@ -23,5 +23,4 @@ class SearchApi:
                search_results: List[Dict[str, str]],
                sort_key: str = 'popularity') -> List[SearchResult]:
         results = sorted(search_results, reverse=True, key=lambda result: result.get(sort_key))
-        sorted_results = [SearchResult(**entry) for entry in results]
-        return sorted_results
+        return [SearchResult(**entry) for entry in results]

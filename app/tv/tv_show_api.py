@@ -18,5 +18,4 @@ class TvShowApi:
                                 headers={"Authorization": f"Bearer {self.bearer_token}"})
 
         raw_results: Dict[str, str] = tv_show_details.json()
-        details = TVShowDetails(**raw_results)
-        return details
+        return TVShowDetails(**raw_results)

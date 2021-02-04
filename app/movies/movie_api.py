@@ -18,5 +18,4 @@ class MovieApi:
                               headers={"Authorization": f"Bearer {self.bearer_token}"})
 
         raw_results: Dict[str, str] = movie_details.json()
-        details = MovieDetails(**raw_results)
-        return details
+        return MovieDetails(**raw_results)

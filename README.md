@@ -3,7 +3,7 @@ TMDB Casting Lookup
 
 ## Tech Stack
 - Python 3.8 
-- Conda or Virtualenv
+- Poetry (build tool)
 - Jupyter Notebook (for Exploratory Data Analysis)
 
 ## Up & Running 

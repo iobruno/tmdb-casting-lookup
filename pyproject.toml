@@ -8,7 +8,7 @@ packages = [
 ]
 
 [tool.poetry.scripts]
-entrypoint = "tmdb.cli:run"
+tmdb = "tmdb.cli:run"
 
 [tool.poetry.dependencies]
 python = "^3.8"

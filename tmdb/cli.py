@@ -9,12 +9,12 @@ from tmdb.tv.tv_show_api import TvShowApi
 app = typer.Typer()
 
 
-@app.command("tmdb-discover")
+@app.command("discover")
 def discover_and_fetch():
     NotImplemented("Discover is not yet implemented")
 
 
-@app.command("tmdb-search")
+@app.command("search")
 def search_and_fetch(query: str = typer.Option(..., "-q", "--query",
                                                help="Query movies, tv shows by name")):
     search_results: Dict[str, List[SearchResult]] = SearchApi().query(query_string=query)

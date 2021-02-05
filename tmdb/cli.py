@@ -1,15 +1,22 @@
-import click
-from typing import List, Dict
+from typing import Dict, List
 
-from tmdb.search.search_api import SearchApi, SearchResult
+import typer
+
 from tmdb.movies.movie_api import MovieApi
+from tmdb.search.search_api import SearchApi, SearchResult
 from tmdb.tv.tv_show_api import TvShowApi
 
+app = typer.Typer()
 
-@click.command()
-@click.option("-q", "--query", required=True, type=str,
-              help="Query for the movie or tv show.")
-def search_and_fetch(query):
+
+@app.command("tmdb-discover")
+def discover_and_fetch():
+    NotImplemented("Discover is not yet implemented")
+
+
+@app.command("tmdb-search")
+def search_and_fetch(query: str = typer.Option(..., "-q", "--query",
+                                               help="Query movies, tv shows by name")):
     search_results: Dict[str, List[SearchResult]] = SearchApi().query(query_string=query)
     movies = search_results.get('movie', [])
     tv_shows = search_results.get('tv', [])
@@ -19,5 +26,5 @@ def search_and_fetch(query):
     tv_show_details = map(lambda tv_show: tv_api.get_details(tv_show.id), tv_shows)
 
 
-if __name__ == "__main__":
-    search_and_fetch()
+def run():
+    app()

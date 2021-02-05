@@ -8,13 +8,13 @@ packages = [
 ]
 
 [tool.poetry.scripts]
-entrypoint = "run:search_and_fetch"
+entrypoint = "tmdb.cli:run"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-click = "7.1.2"
 requests = "2.25.1"
 Pillow = "8.1.0"
+typer = "0.3.2"
 
 [tool.poetry.dev-dependencies]
 jupyterlab = "3.0.7"

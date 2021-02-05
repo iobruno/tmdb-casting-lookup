@@ -1,3 +1,28 @@
+[tool.poetry]
+name = "tmdb-crawler"
+version = "1.0.0"
+description = "TMDB Service to fetch movie/tv show casting"
+authors = ["iobruno <bruno.ariev@gmail.com>"]
+packages = [
+ { include="tmdb", from="." },
+]
+
+[tool.poetry.scripts]
+entrypoint = "run:search_and_fetch"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+click = "7.1.2"
+requests = "2.25.1"
+Pillow = "8.1.0"
+
+[tool.poetry.dev-dependencies]
+jupyterlab = "3.0.7"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.black]
 line-length = 100
 include = '\.pyi?$'

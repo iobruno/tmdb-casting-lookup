@@ -4,7 +4,7 @@ from itertools import groupby
 from operator import attrgetter
 from typing import Dict, List
 
-from app.search.search_results import SearchResult
+from tmdb.search.search_results import SearchResult
 
 
 class SearchApi:

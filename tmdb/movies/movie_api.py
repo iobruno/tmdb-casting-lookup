@@ -2,7 +2,7 @@ import os
 import requests as r
 from typing import Dict
 
-from app.movies.movie import MovieDetails
+from tmdb.movies.movie import MovieDetails
 
 
 class MovieApi:

@@ -2,7 +2,7 @@ import os
 import requests as r
 from typing import Dict
 
-from app.tv.tv_show import TVShowDetails
+from tmdb.tv.tv_show import TVShowDetails
 
 
 class TvShowApi:

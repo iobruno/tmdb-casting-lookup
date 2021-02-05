@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
-from app.casting.casting import Casting
+from tmdb.casting.casting import Casting
 
 
 @dataclass

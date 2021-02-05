@@ -1,15 +1,15 @@
 import click
 from typing import List, Dict
 
-from app.search.search_api import SearchApi, SearchResult
-from app.movies.movie_api import MovieApi
-from app.tv.tv_show_api import TvShowApi
+from tmdb.search.search_api import SearchApi, SearchResult
+from tmdb.movies.movie_api import MovieApi
+from tmdb.tv.tv_show_api import TvShowApi
 
 
 @click.command()
 @click.option("-q", "--query", required=True, type=str,
               help="Query for the movie or tv show.")
-def run(query):
+def search_and_fetch(query):
     search_results: Dict[str, List[SearchResult]] = SearchApi().query(query_string=query)
     movies = search_results.get('movie', [])
     tv_shows = search_results.get('tv', [])
@@ -20,4 +20,4 @@ def run(query):
 
 
 if __name__ == "__main__":
-    run()
+    search_and_fetch()

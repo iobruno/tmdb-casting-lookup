@@ -12,6 +12,7 @@ tmdb = "tmdb.cli:run"
 
 [tool.poetry.dependencies]
 python = "^3.8"
+apache-beam = "2.27.0"
 requests = "2.25.1"
 Pillow = "8.1.0"
 typer = "0.3.2"

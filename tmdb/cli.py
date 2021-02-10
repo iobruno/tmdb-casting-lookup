@@ -29,7 +29,7 @@ def search_and_fetch(query: str = typer.Option(..., "-q", "--query",
         tbl_spec = "cast_movies"
         movies = (pipeline
                   | beam.Create(movies)
-                  | beam.Map(lambda movie: movie_api.get_details(movie.id).to_dict())
+                  | beam.Map(lambda movie: movie_api.get_details(movie.id).to_bq())
                   | beam.io.WriteToBigQuery(tbl_spec,
                                             schema=fetch_movies_schema(),
                                             write_disposition=BQDisposition.WRITE_APPEND,

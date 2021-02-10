@@ -48,6 +48,11 @@ def fetch_movies_schema() -> Dict:
         {'name': "poster_img_path", 'type': "STRING", 'mode': "REQUIRED"},
         {'name': "release_date", 'type': "STRING", 'mode': "REQUIRED"},
         {'name': "genres", 'type': "STRING", 'mode': "REPEATED"},
+        {'name': "casting", 'type': "RECORD", 'mode': "REPEATED", "fields": [
+            {'name': "name", 'type': "STRING", 'mode': "NULLABLE"},
+            {'name': "original_name", 'type': "STRING", 'mode': "NULLABLE"},
+            {'name': "character", 'type': "STRING", 'mode': "NULLABLE"},
+        ]},
         {'name': "external_ids", 'type': "RECORD", 'mode': "REPEATED", "fields": [
             {'name': "imdb_id", 'type': "STRING", 'mode': "NULLABLE"},
             {'name': "facebook_id", 'type': "STRING", 'mode': "NULLABLE"},
@@ -55,6 +60,7 @@ def fetch_movies_schema() -> Dict:
             {'name': "twitter_id", 'type': "STRING", 'mode': "NULLABLE"},
         ]},
         {'name': "is_adult", 'type': "BOOL", 'mode': "REQUIRED"},
+        {'name': "created_at", 'type': "DATETIME", 'mode': "REQUIRED"},
     ]}
 
 

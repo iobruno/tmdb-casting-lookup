@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
+from typing import Dict
 
 
 @dataclass
@@ -31,3 +32,10 @@ class Casting:
     @property
     def is_male(self) -> bool:
         return not self.is_female
+
+    def to_bq(self) -> Dict:
+        return {
+            'name': self.name,
+            'original_name': self.original_name,
+            'character': self.character
+        }

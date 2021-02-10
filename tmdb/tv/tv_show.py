@@ -1,6 +1,7 @@
-from dataclasses import dataclass
-from typing import Dict, List, Optional
+import pendulum
 
+from dataclasses import asdict, dataclass
+from typing import Dict, List
 from tmdb.casting.casting import Casting
 
 
@@ -13,8 +14,8 @@ class TVShowDetails:
     original_lang: str
     poster_img_path: str
     genres: List[str]
-    seasons: List['TVShowSeason']
-    actor_casting: List[Casting]
+    # seasons: List['TVShowSeason']
+    casting: List[Casting]
     external_ids: Dict[str, str]
 
     def __init__(self, **kwargs):
@@ -28,12 +29,19 @@ class TVShowDetails:
                                           kwargs.get('genres')))
         self.seasons: List[TVShowSeason] = list(map(lambda season: TVShowSeason(**season),
                                                     kwargs.get('seasons')))
-        self.actor_casting = self.actors_only(casting=map(lambda casting: Casting(**casting),
-                                                          kwargs.get('credits').get('cast')))
-        self.external_ids = kwargs.get('external_ids')
+        self.casting = self.actors_only(casting=map(lambda casting: Casting(**casting),
+                                                    kwargs.get('credits').get('cast')))
+        self.external_ids = {key: kwargs.get('external_ids').get(key)
+                             for key in ['imdb_id', 'facebook_id', 'instagram_id', 'twitter_id']}
 
     def actors_only(self, casting) -> List[Casting]:
         return list(filter(lambda cast: cast.is_an_actor, casting))
+
+    def to_bq(self) -> Dict:
+        tv_details = asdict(self)
+        tv_details['casting'] = [cast.to_bq() for cast in self.casting]
+        tv_details['created_at'] = pendulum.now().to_datetime_string()
+        return tv_details
 
 
 @dataclass

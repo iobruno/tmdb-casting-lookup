@@ -14,7 +14,7 @@ class TVShowDetails:
     original_lang: str
     poster_img_path: str
     genres: List[str]
-    # seasons: List['TVShowSeason']
+    seasons: List['TVShowSeason']
     casting: List[Casting]
     external_ids: Dict[str, str]
 
@@ -41,6 +41,7 @@ class TVShowDetails:
     def to_bq(self) -> Dict:
         tv_details = asdict(self)
         tv_details['casting'] = [cast.to_bq() for cast in self.casting]
+        tv_details['seasons'] = [season.to_bq() for season in self.seasons]
         tv_details['created_at'] = pendulum.now().to_datetime_string()
         return tv_details
 
@@ -65,3 +66,11 @@ class TVShowSeason:
     @property
     def release_date(self):
         return self.air_date
+
+    def to_bq(self) -> Dict:
+        return {
+            "number": self.number,
+            "name": self.name,
+            "number_episodes": self.num_episodes,
+            "air_date": self.air_date,
+        }

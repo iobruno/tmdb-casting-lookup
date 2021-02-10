@@ -34,13 +34,13 @@ def search_and_fetch(query: str = typer.Option(..., "-q", "--query",
                     | 'Create TV Shows' >> beam.Create(tv_shows)
                     | beam.Map(lambda tv_show: tv_api.get_details(tv_show.id).to_bq()))
 
-        movies | 'Movies to BQ' >> beam.io.WriteToBigQuery("project_id:dataset.casting_movies",
+        movies | 'Movies to BQ' >> beam.io.WriteToBigQuery("recomendacao-gcom:reglobinition.casting_movies",
                                                            schema=fetch_movies_schema(),
                                                            write_disposition=BQDisposition.WRITE_APPEND,
                                                            create_disposition=BQDisposition.CREATE_IF_NEEDED,
                                                            custom_gcs_temp_location="gs://recomendacao-reglobinition/")
 
-        tv_shows | 'TV Shows to BQ' >> beam.io.WriteToBigQuery("project_id:dataset.casting_tv",
+        tv_shows | 'TV Shows to BQ' >> beam.io.WriteToBigQuery("recomendacao-gcom:reglobinition.casting_tv",
                                                                schema=fetch_tv_shows_schema(),
                                                                write_disposition=BQDisposition.WRITE_APPEND,
                                                                create_disposition=BQDisposition.CREATE_IF_NEEDED,
@@ -60,6 +60,12 @@ def fetch_tv_shows_schema() -> Dict:
             {'name': "name", 'type': "STRING", 'mode': "NULLABLE"},
             {'name': "original_name", 'type': "STRING", 'mode': "NULLABLE"},
             {'name': "character", 'type': "STRING", 'mode': "NULLABLE"},
+        ]},
+        {'name': "seasons", 'type': "RECORD", 'mode': "REPEATED", "fields": [
+            {'name': "number", 'type': "INT64", 'mode': "NULLABLE"},
+            {'name': "name", 'type': "STRING", 'mode': "NULLABLE"},
+            {'name': "number_episodes", 'type': "INT64", 'mode': "NULLABLE"},
+            {'name': "air_date", 'type': "STRING", 'mode': "NULLABLE"},
         ]},
         {'name': "external_ids", 'type': "RECORD", 'mode': "NULLABLE", "fields": [
             {'name': "imdb_id", 'type': "STRING", 'mode': "NULLABLE"},

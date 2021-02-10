@@ -2,6 +2,7 @@ from dataclasses import asdict, dataclass
 from typing import Dict, List
 
 from tmdb.casting.casting import Casting
+from datetime import datetime
 
 
 @dataclass
@@ -14,7 +15,7 @@ class MovieDetails:
     poster_img_path: str
     release_date: str
     genres: List[str]
-    # actor_casting: List[Casting]
+    casting: List[Casting]
     external_ids: Dict[str, str]
     is_adult: bool
 
@@ -28,8 +29,8 @@ class MovieDetails:
         self.release_date = kwargs.get('release_date')
         self.genres: List[str] = list(map(lambda genre: genre.get('name'),
                                           kwargs.get('genres')))
-        # self.actor_casting = self.actors_only(casting=map(lambda movie: Casting(**movie),
-        #                                                   kwargs.get('credits').get('cast')))
+        self.casting = self.actors_only(casting=map(lambda cast: Casting(**cast),
+                                                    kwargs.get('credits').get('cast')))
         self.external_ids = kwargs.get('external_ids')
         self.is_adult = kwargs.get('adult')
 
@@ -37,4 +38,7 @@ class MovieDetails:
         return list(filter(lambda cast: cast.is_an_actor, casting))
 
     def to_bq(self) -> Dict:
-        return asdict(self)
+        movie_details = asdict(self)
+        movie_details['casting'] = [cast.to_bq() for cast in self.casting]
+        movie_details['created_at'] = datetime.now()
+        return movie_details

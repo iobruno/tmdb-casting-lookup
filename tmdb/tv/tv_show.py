@@ -32,7 +32,8 @@ class TVShowDetails:
         self.casting = self.actors_only(casting=map(lambda casting: Casting(**casting),
                                                     kwargs.get('credits').get('cast')))
         self.external_ids = {key: kwargs.get('external_ids').get(key)
-                             for key in ['imdb_id', 'facebook_id', 'instagram_id', 'twitter_id']}
+                             for key in ['imdb_id', 'tvdb_id',
+                                         'facebook_id', 'instagram_id', 'twitter_id']}
 
     def actors_only(self, casting) -> List[Casting]:
         return list(filter(lambda cast: cast.is_an_actor, casting))

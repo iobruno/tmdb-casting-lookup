@@ -26,16 +26,50 @@ def search_and_fetch(query: str = typer.Option(..., "-q", "--query",
     movie_api, tv_api = MovieApi(), TvShowApi()
 
     with beam.Pipeline() as pipeline:
-        tbl_spec = "cast_movies"
         movies = (pipeline
                   | beam.Create(movies)
-                  | beam.Map(lambda movie: movie_api.get_details(movie.id).to_bq())
-                  | beam.io.WriteToBigQuery(tbl_spec,
-                                            schema=fetch_movies_schema(),
-                                            write_disposition=BQDisposition.WRITE_APPEND,
-                                            create_disposition=BQDisposition.CREATE_IF_NEEDED,
-                                            custom_gcs_temp_location="gs://temp-bucket/")
-                  )
+                  | beam.Map(lambda movie: movie_api.get_details(movie.id).to_bq()))
+
+        movies | beam.io.WriteToBigQuery("project_id:dataset.casting_movies",
+                                         schema=fetch_movies_schema(),
+                                         write_disposition=BQDisposition.WRITE_TRUNCATE,
+                                         create_disposition=BQDisposition.CREATE_IF_NEEDED,
+                                         custom_gcs_temp_location="gs://recomendacao-reglobinition/")
+
+        tv_shows = (pipeline
+                    | beam.Create(tv_shows)
+                    | beam.Map(lambda tv_show: tv_api.get_details(tv_show.id).to_bq()))
+
+        tv_shows | beam.io.WriteToBigQuery("project_id:dataset.casting_tv",
+                                           schema=fetch_tv_shows_schema(),
+                                           write_disposition=BQDisposition.WRITE_TRUNCATE,
+                                           create_disposition=BQDisposition.CREATE_IF_NEEDED,
+                                           custom_gcs_temp_location="gs://recomendacao-reglobinition/")
+
+
+def fetch_tv_shows_schema() -> Dict:
+    return {'fields': [
+        {'name': "id", 'type': "INT64", 'mode': "REQUIRED"},
+        {'name': "title", 'type': "STRING", 'mode': "REQUIRED"},
+        {'name': "original_title", 'type': "STRING", 'mode': "REQUIRED"},
+        {'name': "overview", 'type': "STRING", 'mode': "REQUIRED"},
+        {'name': "original_lang", 'type': "STRING", 'mode': "REQUIRED"},
+        {'name': "poster_img_path", 'type': "STRING", 'mode': "NULLABLE"},
+        {'name': "genres", 'type': "STRING", 'mode': "REPEATED"},
+        {'name': "casting", 'type': "RECORD", 'mode': "REPEATED", "fields": [
+            {'name': "name", 'type': "STRING", 'mode': "NULLABLE"},
+            {'name': "original_name", 'type': "STRING", 'mode': "NULLABLE"},
+            {'name': "character", 'type': "STRING", 'mode': "NULLABLE"},
+        ]},
+        {'name': "external_ids", 'type': "RECORD", 'mode': "NULLABLE", "fields": [
+            {'name': "imdb_id", 'type': "STRING", 'mode': "NULLABLE"},
+            {'name': "tvdb_id", 'type': "INT64", 'mode': "NULLABLE"},
+            {'name': "facebook_id", 'type': "STRING", 'mode': "NULLABLE"},
+            {'name': "instagram_id", 'type': "STRING", 'mode': "NULLABLE"},
+            {'name': "twitter_id", 'type': "STRING", 'mode': "NULLABLE"},
+        ]},
+        {'name': "created_at", 'type': "DATETIME", 'mode': "REQUIRED"},
+    ]}
 
 
 def fetch_movies_schema() -> Dict:
@@ -45,7 +79,7 @@ def fetch_movies_schema() -> Dict:
         {'name': "original_title", 'type': "STRING", 'mode': "REQUIRED"},
         {'name': "overview", 'type': "STRING", 'mode': "REQUIRED"},
         {'name': "original_lang", 'type': "STRING", 'mode': "REQUIRED"},
-        {'name': "poster_img_path", 'type': "STRING", 'mode': "REQUIRED"},
+        {'name': "poster_img_path", 'type': "STRING", 'mode': "NULLABLE"},
         {'name': "release_date", 'type': "STRING", 'mode': "REQUIRED"},
         {'name': "genres", 'type': "STRING", 'mode': "REPEATED"},
         {'name': "casting", 'type': "RECORD", 'mode': "REPEATED", "fields": [
@@ -53,7 +87,7 @@ def fetch_movies_schema() -> Dict:
             {'name': "original_name", 'type': "STRING", 'mode': "NULLABLE"},
             {'name': "character", 'type': "STRING", 'mode': "NULLABLE"},
         ]},
-        {'name': "external_ids", 'type': "RECORD", 'mode': "REPEATED", "fields": [
+        {'name': "external_ids", 'type': "RECORD", 'mode': "NULLABLE", "fields": [
             {'name': "imdb_id", 'type': "STRING", 'mode': "NULLABLE"},
             {'name': "facebook_id", 'type': "STRING", 'mode': "NULLABLE"},
             {'name': "instagram_id", 'type': "STRING", 'mode': "NULLABLE"},

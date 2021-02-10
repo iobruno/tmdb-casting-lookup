@@ -1,8 +1,9 @@
 from dataclasses import asdict, dataclass
 from typing import Dict, List
 
+import pendulum
+
 from tmdb.casting.casting import Casting
-from datetime import datetime
 
 
 @dataclass
@@ -40,5 +41,5 @@ class MovieDetails:
     def to_bq(self) -> Dict:
         movie_details = asdict(self)
         movie_details['casting'] = [cast.to_bq() for cast in self.casting]
-        movie_details['created_at'] = datetime.now()
+        movie_details['created_at'] = pendulum.now().to_datetime_string()
         return movie_details

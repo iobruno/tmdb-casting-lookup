@@ -27,24 +27,24 @@ def search_and_fetch(query: str = typer.Option(..., "-q", "--query",
 
     with beam.Pipeline() as pipeline:
         movies = (pipeline
-                  | beam.Create(movies)
+                  | 'Create Movies' >> beam.Create(movies)
                   | beam.Map(lambda movie: movie_api.get_details(movie.id).to_bq()))
 
-        movies | beam.io.WriteToBigQuery("project_id:dataset.casting_movies",
-                                         schema=fetch_movies_schema(),
-                                         write_disposition=BQDisposition.WRITE_TRUNCATE,
-                                         create_disposition=BQDisposition.CREATE_IF_NEEDED,
-                                         custom_gcs_temp_location="gs://recomendacao-reglobinition/")
-
         tv_shows = (pipeline
-                    | beam.Create(tv_shows)
+                    | 'Create TV Shows' >> beam.Create(tv_shows)
                     | beam.Map(lambda tv_show: tv_api.get_details(tv_show.id).to_bq()))
 
-        tv_shows | beam.io.WriteToBigQuery("project_id:dataset.casting_tv",
-                                           schema=fetch_tv_shows_schema(),
-                                           write_disposition=BQDisposition.WRITE_TRUNCATE,
-                                           create_disposition=BQDisposition.CREATE_IF_NEEDED,
-                                           custom_gcs_temp_location="gs://recomendacao-reglobinition/")
+        movies | 'Movies to BQ' >> beam.io.WriteToBigQuery("project_id:dataset.casting_movies",
+                                                           schema=fetch_movies_schema(),
+                                                           write_disposition=BQDisposition.WRITE_APPEND,
+                                                           create_disposition=BQDisposition.CREATE_IF_NEEDED,
+                                                           custom_gcs_temp_location="gs://recomendacao-reglobinition/")
+
+        tv_shows | 'TV Shows to BQ' >> beam.io.WriteToBigQuery("project_id:dataset.casting_tv",
+                                                               schema=fetch_tv_shows_schema(),
+                                                               write_disposition=BQDisposition.WRITE_APPEND,
+                                                               create_disposition=BQDisposition.CREATE_IF_NEEDED,
+                                                               custom_gcs_temp_location="gs://recomendacao-reglobinition/")
 
 
 def fetch_tv_shows_schema() -> Dict:

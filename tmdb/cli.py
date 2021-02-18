@@ -1,14 +1,25 @@
-from typing import Dict, List
+from pathlib import Path
+from typing import Dict
 
 import apache_beam as beam
 import typer
-from apache_beam.io import BigQueryDisposition as BQDisposition
+from apache_beam.io import BigQueryDisposition
+from PIL import UnidentifiedImageError
 
-from tmdb.movies.movie_api import MovieApi
-from tmdb.search.search_api import SearchApi, SearchResult
+from tmdb.image.gcs_api import GCSApi
+from tmdb.image.image_api import ImageApi
+from tmdb.movies.movie_api import MovieApi, MovieDetails
+from tmdb.search.search_api import SearchApi
 from tmdb.tv.tv_show_api import TvShowApi
+from tmdb.utils.config import Configuration
+from tmdb.utils.logger import get_logger
 
 app = typer.Typer()
+logger = get_logger("CLI App")
+
+logger.info("Loading configuration file")
+config_file = Path(__file__).parent.parent.joinpath("application.yml")
+cfg = Configuration.load_config(config_file, profile="prod")
 
 
 @app.command("discover")
@@ -16,35 +27,56 @@ def discover_and_fetch():
     NotImplemented("Discover is not yet implemented")
 
 
+def fetch_and_upload_images(p: MovieDetails):
+    """Production may refer to either a Movie or TVShow"""
+    image_api = ImageApi()
+    gcs = GCSApi()
+
+    for cast in p.casting:
+        try:
+            logger.info(f"Fetching profile picture for {cast.name}...")
+            pic = image_api.get_profile_picture(cast.pfp)
+
+            blob_name = f"movies/{p.id}/casting/{cast.name}.jpg"
+            cast.profile_img_path = gcs.image_upload(pic, blob_name)
+            logger.info(f"Image successfully Uploaded to {cast.profile_img_path}")
+        except UnidentifiedImageError:
+            logger.warn("Could not find an image for id: {name} (character). Skipping..."
+                        .format(name=cast.name, character=cast.character))
+
+    logger.info(f"Fetching poster picture for '{p.title}'...")
+    pic = image_api.get_poster_picture(p.poster_img_path)
+    blob_name = f"movies/{p.id}/poster/{p.original_title}.jpg"
+
+    p.poster_img_path = gcs.image_upload(pic, blob_name)
+    logger.info(f"Image successfully Uploaded to {p.poster_img_path}")
+
+    return p
+
+
 @app.command("search")
 def search_and_fetch(query: str = typer.Option(..., "-q", "--query",
                                                help="Query movies, tv shows by name")):
-    search_results: Dict[str, List[SearchResult]] = SearchApi().query(query_string=query)
-    movies = search_results.get('movie', [])
-    tv_shows = search_results.get('tv', [])
+    logger.info(f"Querying DB for Movies and TV Show with '{query}'")
+    search_results = SearchApi().query(query_string=query)
+    movies_results = search_results.get('movie', [])
+    tv_shows_results = search_results.get('tv', [])
 
     movie_api, tv_api = MovieApi(), TvShowApi()
 
     with beam.Pipeline() as pipeline:
         movies = (pipeline
-                  | 'Create Movies' >> beam.Create(movies)
-                  | beam.Map(lambda movie: movie_api.get_details(movie.id).to_bq()))
+                  | beam.Create(movies_results)
+                  | beam.Map(lambda movie_result: movie_api.get_details(movie_result.id))
+                  | beam.Map(fetch_and_upload_images)
+                  | beam.Map(lambda movie: movie.to_bq())
+                  )
 
-        tv_shows = (pipeline
-                    | 'Create TV Shows' >> beam.Create(tv_shows)
-                    | beam.Map(lambda tv_show: tv_api.get_details(tv_show.id).to_bq()))
-
-        movies | 'Movies to BQ' >> beam.io.WriteToBigQuery("recomendacao-gcom:reglobinition.casting_movies",
-                                                           schema=fetch_movies_schema(),
-                                                           write_disposition=BQDisposition.WRITE_APPEND,
-                                                           create_disposition=BQDisposition.CREATE_IF_NEEDED,
-                                                           custom_gcs_temp_location="gs://recomendacao-reglobinition/")
-
-        tv_shows | 'TV Shows to BQ' >> beam.io.WriteToBigQuery("recomendacao-gcom:reglobinition.casting_tv",
-                                                               schema=fetch_tv_shows_schema(),
-                                                               write_disposition=BQDisposition.WRITE_APPEND,
-                                                               create_disposition=BQDisposition.CREATE_IF_NEEDED,
-                                                               custom_gcs_temp_location="gs://recomendacao-reglobinition/")
+        movies | beam.io.WriteToBigQuery(cfg.gcloud.casting_movies_table,
+                                         schema=fetch_movies_schema(),
+                                         write_disposition=BigQueryDisposition.WRITE_TRUNCATE,
+                                         create_disposition=BigQueryDisposition.CREATE_IF_NEEDED,
+                                         custom_gcs_temp_location=cfg.gcloud.gcs_to_bq_temp)
 
 
 def fetch_tv_shows_schema() -> Dict:
@@ -92,6 +124,7 @@ def fetch_movies_schema() -> Dict:
             {'name': "name", 'type': "STRING", 'mode': "NULLABLE"},
             {'name': "original_name", 'type': "STRING", 'mode': "NULLABLE"},
             {'name': "character", 'type': "STRING", 'mode': "NULLABLE"},
+            {'name': "profile_img_path", 'type': "STRING", 'mode': "NULLABLE"},
         ]},
         {'name': "external_ids", 'type': "RECORD", 'mode': "NULLABLE", "fields": [
             {'name': "imdb_id", 'type': "STRING", 'mode': "NULLABLE"},

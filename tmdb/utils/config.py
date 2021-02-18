@@ -6,7 +6,7 @@ class Configuration:
     config: DictConfig = None
 
     @classmethod
-    def load_config(cls, file: str, profile: str = "default") -> DictConfig:
+    def load_config(cls, file: str = None, profile: str = "default") -> DictConfig:
         if cls.config:
             return cls.config
         else:

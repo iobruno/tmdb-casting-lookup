@@ -4,6 +4,7 @@ from typing import Dict
 import apache_beam as beam
 import typer
 from apache_beam.io import BigQueryDisposition
+from slugify import slugify
 from PIL import UnidentifiedImageError
 
 from tmdb.image.gcs_api import GCSApi
@@ -37,7 +38,7 @@ def fetch_and_upload_images(p: MovieDetails):
             logger.info(f"Fetching profile picture for '{cast.name}'...")
             pic = image_api.get_profile_picture(cast.pfp)
 
-            blob_name = f"{p.type}/{p.id}/casting/{cast.name}.jpg"
+            blob_name = f"{p.type}/{p.id}/casting/{slugify(cast.name)}.jpg"
             cast.profile_img_path = gcs.image_upload(pic, blob_name)
             logger.info(f"Image successfully Uploaded to {cast.profile_img_path}'")
         except UnidentifiedImageError:
@@ -46,7 +47,7 @@ def fetch_and_upload_images(p: MovieDetails):
 
     logger.info(f"Fetching poster picture for '{p.title}'...")
     pic = image_api.get_poster_picture(p.poster_img_path)
-    blob_name = f"{p.type}/{p.id}/poster/{p.original_title}.jpg"
+    blob_name = f"{p.type}/{p.id}/poster/{slugify(p.original_title)}.jpg"
 
     p.poster_img_path = gcs.image_upload(pic, blob_name)
     logger.info(f"Image successfully Uploaded to '{p.poster_img_path}'")

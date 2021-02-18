@@ -69,14 +69,15 @@ def search_and_fetch(query: str = typer.Option(..., "-q", "--query",
                   | beam.Create(movies_results)
                   | beam.Map(lambda movie_result: movie_api.get_details(movie_result.id))
                   | beam.Map(fetch_and_upload_images)
-                  | beam.Map(lambda movie: movie.to_bq())
-                  )
+                  | beam.Map(lambda movie: movie.to_bq()))
 
         movies | beam.io.WriteToBigQuery(cfg.gcloud.casting_movies_table,
                                          schema=fetch_movies_schema(),
-                                         write_disposition=BigQueryDisposition.WRITE_TRUNCATE,
+                                         write_disposition=BigQueryDisposition.WRITE_APPEND,
                                          create_disposition=BigQueryDisposition.CREATE_IF_NEEDED,
-                                         custom_gcs_temp_location=cfg.gcloud.gcs_to_bq_temp)
+                                         method="STREAMING_INSERTS")
+
+    logger.info("All done!")
 
 
 def fetch_tv_shows_schema() -> Dict:

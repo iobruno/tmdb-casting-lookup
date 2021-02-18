@@ -38,6 +38,10 @@ class MovieDetails:
     def actors_only(self, casting) -> List[Casting]:
         return list(filter(lambda cast: cast.is_an_actor, casting))
 
+    @property
+    def type(self):
+        return "movies"
+
     def to_bq(self) -> Dict:
         movie_details = asdict(self)
         movie_details['casting'] = [cast.to_bq() for cast in self.casting]

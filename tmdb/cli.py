@@ -37,16 +37,16 @@ def fetch_and_upload_images(p: MovieDetails):
             logger.info(f"Fetching profile picture for '{cast.name}'...")
             pic = image_api.get_profile_picture(cast.pfp)
 
-            blob_name = f"movies/{p.id}/casting/{cast.name}.jpg"
+            blob_name = f"{p.type}/{p.id}/casting/{cast.name}.jpg"
             cast.profile_img_path = gcs.image_upload(pic, blob_name)
-            logger.info(f"Image successfully Uploaded to {cast.profile_img_path}")
+            logger.info(f"Image successfully Uploaded to {cast.profile_img_path}'")
         except UnidentifiedImageError:
             logger.warn("Could not find an image for id: '{name}' (character). Skipping..."
                         .format(name=cast.name, character=cast.character))
 
     logger.info(f"Fetching poster picture for '{p.title}'...")
     pic = image_api.get_poster_picture(p.poster_img_path)
-    blob_name = f"movies/{p.id}/poster/{p.original_title}.jpg"
+    blob_name = f"{p.type}/{p.id}/poster/{p.original_title}.jpg"
 
     p.poster_img_path = gcs.image_upload(pic, blob_name)
     logger.info(f"Image successfully Uploaded to '{p.poster_img_path}'")
@@ -58,24 +58,36 @@ def fetch_and_upload_images(p: MovieDetails):
 def search_and_fetch(query: str = typer.Option(..., "-q", "--query",
                                                help="Query movies, tv shows by name")):
     logger.info(f"Querying DB for Movies and TV Show with '{query}'...")
-    search_results = SearchApi().query(query_string=query)
+    search_api, movie_api, tv_api = SearchApi(), MovieApi(), TvShowApi()
+
+    search_results = search_api.query(query_string=query)
     movies_results = search_results.get('movie', [])
     tv_shows_results = search_results.get('tv', [])
 
-    movie_api, tv_api = MovieApi(), TvShowApi()
-
     with beam.Pipeline() as pipeline:
         movies = (pipeline
-                  | beam.Create(movies_results)
-                  | beam.Map(lambda movie_result: movie_api.get_details(movie_result.id))
-                  | beam.Map(fetch_and_upload_images)
-                  | beam.Map(lambda movie: movie.to_bq()))
+                  | "Movies" >> beam.Create(movies_results)
+                  | "Movie Details" >> beam.Map(lambda movie_result: movie_api.get_details(movie_result.id))
+                  | "Movie Pics" >> beam.Map(fetch_and_upload_images)
+                  | "Movie BQ Transform" >> beam.Map(lambda movie: movie.to_bq()))
 
-        movies | beam.io.WriteToBigQuery(cfg.gcloud.casting_movies_table,
-                                         schema=fetch_movies_schema(),
-                                         write_disposition=BigQueryDisposition.WRITE_APPEND,
-                                         create_disposition=BigQueryDisposition.CREATE_IF_NEEDED,
-                                         method="STREAMING_INSERTS")
+        movies | "Movie 2 BQ" >> beam.io.WriteToBigQuery(cfg.gcloud.casting_movies_table,
+                                                         schema=fetch_movies_schema(),
+                                                         write_disposition=BigQueryDisposition.WRITE_APPEND,
+                                                         create_disposition=BigQueryDisposition.CREATE_IF_NEEDED,
+                                                         method="STREAMING_INSERTS")
+
+        tvs = (pipeline
+               | "TV Shows" >> beam.Create(tv_shows_results)
+               | "TV Details" >> beam.Map(lambda tv_result: tv_api.get_details(tv_result.id))
+               | "TV Pics" >> beam.Map(fetch_and_upload_images)
+               | "TV BQ Transform" >> beam.Map(lambda tv: tv.to_bq()))
+
+        tvs | "TV 2 BQ" >> beam.io.WriteToBigQuery(cfg.gcloud.casting_tv_table,
+                                                   schema=fetch_tv_shows_schema(),
+                                                   write_disposition=BigQueryDisposition.WRITE_APPEND,
+                                                   create_disposition=BigQueryDisposition.CREATE_IF_NEEDED,
+                                                   method="STREAMING_INSERTS")
 
     logger.info("All done!")
 
@@ -93,6 +105,7 @@ def fetch_tv_shows_schema() -> Dict:
             {'name': "name", 'type': "STRING", 'mode': "NULLABLE"},
             {'name': "original_name", 'type': "STRING", 'mode': "NULLABLE"},
             {'name': "character", 'type': "STRING", 'mode': "NULLABLE"},
+            {'name': "profile_img_path", 'type': "STRING", 'mode': "NULLABLE"},
         ]},
         {'name': "seasons", 'type': "RECORD", 'mode': "REPEATED", "fields": [
             {'name': "number", 'type': "INT64", 'mode': "NULLABLE"},
@@ -140,7 +153,3 @@ def fetch_movies_schema() -> Dict:
 
 def run():
     app()
-
-
-if __name__ == "__main__":
-    run()

@@ -9,10 +9,11 @@ class ImageApi:
 
     def __init__(self, bearer_token: str = os.environ['TMDB_API_KEY']):
         self.bearer_token = bearer_token
-        self.image_endpoint = "https://api.themoviedb.org/3/movie"
+        self.image_endpoint = "https://www.themoviedb.org/t/p/"
 
     def get_picture(self, image_id: str, size: str):
-        NotImplemented()
+        image = r.get(f"{self.image_endpoint}/{size}/{image_id}",
+                      headers={"Authorization": f"Bearer {self.bearer_token}"})
 
     def get_profile_picture(self, image_id: str, profile_img_size: str = "w185"):
         """
@@ -23,7 +24,7 @@ class ImageApi:
         """
         return self.get_picture(image_id, profile_img_size)
 
-    def get_poster_picture(self, image_id: str, poster_img_size: str = "w185"):
+    def get_poster_picture(self, image_id: str, poster_img_size: str = "w780"):
         """
         :param image_id: TMDB image id
         :param poster_img_size: Width or Height of the image requested

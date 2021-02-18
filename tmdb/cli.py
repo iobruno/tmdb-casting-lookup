@@ -34,14 +34,14 @@ def fetch_and_upload_images(p: MovieDetails):
 
     for cast in p.casting:
         try:
-            logger.info(f"Fetching profile picture for {cast.name}...")
+            logger.info(f"Fetching profile picture for '{cast.name}'...")
             pic = image_api.get_profile_picture(cast.pfp)
 
             blob_name = f"movies/{p.id}/casting/{cast.name}.jpg"
             cast.profile_img_path = gcs.image_upload(pic, blob_name)
             logger.info(f"Image successfully Uploaded to {cast.profile_img_path}")
         except UnidentifiedImageError:
-            logger.warn("Could not find an image for id: {name} (character). Skipping..."
+            logger.warn("Could not find an image for id: '{name}' (character). Skipping..."
                         .format(name=cast.name, character=cast.character))
 
     logger.info(f"Fetching poster picture for '{p.title}'...")
@@ -49,7 +49,7 @@ def fetch_and_upload_images(p: MovieDetails):
     blob_name = f"movies/{p.id}/poster/{p.original_title}.jpg"
 
     p.poster_img_path = gcs.image_upload(pic, blob_name)
-    logger.info(f"Image successfully Uploaded to {p.poster_img_path}")
+    logger.info(f"Image successfully Uploaded to '{p.poster_img_path}'")
 
     return p
 
@@ -57,7 +57,7 @@ def fetch_and_upload_images(p: MovieDetails):
 @app.command("search")
 def search_and_fetch(query: str = typer.Option(..., "-q", "--query",
                                                help="Query movies, tv shows by name")):
-    logger.info(f"Querying DB for Movies and TV Show with '{query}'")
+    logger.info(f"Querying DB for Movies and TV Show with '{query}'...")
     search_results = SearchApi().query(query_string=query)
     movies_results = search_results.get('movie', [])
     tv_shows_results = search_results.get('tv', [])

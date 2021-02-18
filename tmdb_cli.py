@@ -19,7 +19,7 @@ app = typer.Typer()
 logger = get_logger("CLI App")
 
 logger.info("Loading configuration file")
-config_file = Path(__file__).parent.parent.joinpath("application.yml")
+config_file = Path(__file__).parent.joinpath("application.yml")
 cfg = Configuration.load_config(config_file, profile="prod")
 
 

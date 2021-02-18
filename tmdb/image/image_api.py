@@ -1,8 +1,6 @@
 import os
+from PIL import Image
 import requests as r
-from typing import Dict
-
-from tmdb.movies.movie import MovieDetails
 
 
 class ImageApi:
@@ -12,8 +10,8 @@ class ImageApi:
         self.image_endpoint = "https://www.themoviedb.org/t/p/"
 
     def get_picture(self, image_id: str, size: str):
-        image = r.get(f"{self.image_endpoint}/{size}/{image_id}",
-                      headers={"Authorization": f"Bearer {self.bearer_token}"})
+        dl_image = r.get(f"{self.image_endpoint}/{size}/{image_id}", stream=True)
+        return Image.open(dl_image.raw)
 
     def get_profile_picture(self, image_id: str, profile_img_size: str = "w185"):
         """

@@ -26,6 +26,10 @@ class Casting:
         return self.department == 'Acting'
 
     @property
+    def pfp(self) -> str:
+        return self.profile_img_path
+
+    @property
     def is_female(self) -> bool:
         return self.gender == 1
 
@@ -37,5 +41,6 @@ class Casting:
         return {
             'name': self.name,
             'original_name': self.original_name,
-            'character': self.character
+            'character': self.character,
+            'profile_img_path': self.profile_img_path
         }

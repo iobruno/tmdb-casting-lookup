@@ -1,0 +1,5 @@
+prod:
+  gcloud:
+    bucket_name: "bucket_name"
+    casting_movies_table: "project_id:dataset_id.table_name"
+    casting_tv_table: "project_id:dataset_id.table_name"

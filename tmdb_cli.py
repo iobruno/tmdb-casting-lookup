@@ -153,3 +153,7 @@ def fetch_movies_schema() -> Dict:
 
 def run():
     app()
+
+
+if __name__ == "__main__":
+    run()

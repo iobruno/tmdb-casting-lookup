@@ -1,4 +1,3 @@
-import os
 from PIL import Image
 from PIL.JpegImagePlugin import JpegImageFile
 import requests as r
@@ -6,7 +5,7 @@ import requests as r
 
 class ImageApi:
 
-    def __init__(self, bearer_token: str = os.environ['TMDB_API_KEY']):
+    def __init__(self, bearer_token: str):
         self.bearer_token = bearer_token
         self.image_endpoint = "https://www.themoviedb.org/t/p/"
 

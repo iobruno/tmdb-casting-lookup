@@ -1,4 +1,3 @@
-import os
 import requests as r
 from itertools import groupby
 from operator import attrgetter
@@ -9,7 +8,7 @@ from tmdb.search.search_results import SearchResult
 
 class SearchApi:
 
-    def __init__(self, bearer_token: str = os.environ['TMDB_API_KEY']):
+    def __init__(self, bearer_token: str):
         self.bearer_token = bearer_token
         self.search_endpoint = "https://api.themoviedb.org/3/search/multi"
 

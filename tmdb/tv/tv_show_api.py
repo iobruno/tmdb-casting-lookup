@@ -1,4 +1,3 @@
-import os
 import requests as r
 from typing import Dict
 
@@ -10,7 +9,7 @@ logger = get_logger("TvShowApi")
 
 class TvShowApi:
 
-    def __init__(self, bearer_token: str = os.environ['TMDB_API_KEY']):
+    def __init__(self, bearer_token: str):
         self.bearer_token = bearer_token
         self.movie_details_endpoint = "https://api.themoviedb.org/3/tv"
 

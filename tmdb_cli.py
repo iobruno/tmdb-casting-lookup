@@ -73,8 +73,8 @@ def search_and_fetch(query: str = typer.Option(..., "-q", "--query",
         temp_location=cfg.gcloud.dataflow.temp_location,
         runner="DataflowRunner",
         max_num_workers=2,
-        setup_file=str(project_root.joinpath("setup.py"))
-    )
+        setup_file=str(project_root.joinpath("setup.py")),
+        save_main_session=True)
 
     search_results = search_api.query(query_string=query)
     movies_results = search_results.get('movie', [])

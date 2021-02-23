@@ -4,6 +4,7 @@ from typing import Dict
 import apache_beam as beam
 import typer
 from apache_beam.io import BigQueryDisposition
+from apache_beam.options.pipeline_options import PipelineOptions, SetupOptions
 from slugify import slugify
 from PIL import UnidentifiedImageError
 
@@ -19,7 +20,8 @@ app = typer.Typer()
 logger = get_logger("CLI App")
 
 logger.info("Loading configuration file")
-config_file = Path(__file__).parent.joinpath("application.yml")
+project_root = Path(__file__).parent
+config_file = project_root.joinpath("application.yml")
 cfg = Configuration.load_config(config_file, profile="prod")
 
 
@@ -61,18 +63,26 @@ def search_and_fetch(query: str = typer.Option(..., "-q", "--query",
     logger.info(f"Querying DB for Movies and TV Show with '{query}'...")
     search_api, movie_api, tv_api = SearchApi(), MovieApi(), TvShowApi()
 
+    options = PipelineOptions(
+        project=cfg.gcloud.project_name,
+        region=cfg.gcloud.region,
+        job_name=cfg.gcloud.dataflow.job_name,
+        temp_location=cfg.gcloud.dataflow.temp_location,
+        runner="DataflowRunner",
+        max_num_workers=2)
+
     search_results = search_api.query(query_string=query)
     movies_results = search_results.get('movie', [])
     tv_shows_results = search_results.get('tv', [])
 
-    with beam.Pipeline() as pipeline:
+    with beam.Pipeline(options=options) as pipeline:
         movies = (pipeline
                   | "Movies" >> beam.Create(movies_results)
                   | "Movie Details" >> beam.Map(lambda movie_result: movie_api.get_details(movie_result.id))
                   | "Movie Pics" >> beam.Map(fetch_and_upload_images)
                   | "Movie BQ Transform" >> beam.Map(lambda movie: movie.to_bq()))
 
-        movies | "Movie 2 BQ" >> beam.io.WriteToBigQuery(cfg.gcloud.casting_movies_table,
+        movies | "Movie 2 BQ" >> beam.io.WriteToBigQuery(cfg.gcloud.big_query.casting_movies_table,
                                                          schema=fetch_movies_schema(),
                                                          write_disposition=BigQueryDisposition.WRITE_APPEND,
                                                          create_disposition=BigQueryDisposition.CREATE_IF_NEEDED,
@@ -84,7 +94,7 @@ def search_and_fetch(query: str = typer.Option(..., "-q", "--query",
                | "TV Pics" >> beam.Map(fetch_and_upload_images)
                | "TV BQ Transform" >> beam.Map(lambda tv: tv.to_bq()))
 
-        tvs | "TV 2 BQ" >> beam.io.WriteToBigQuery(cfg.gcloud.casting_tv_table,
+        tvs | "TV 2 BQ" >> beam.io.WriteToBigQuery(cfg.gcloud.big_query.casting_tv_table,
                                                    schema=fetch_tv_shows_schema(),
                                                    write_disposition=BigQueryDisposition.WRITE_APPEND,
                                                    create_disposition=BigQueryDisposition.CREATE_IF_NEEDED,

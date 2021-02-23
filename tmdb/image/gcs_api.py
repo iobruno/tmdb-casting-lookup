@@ -12,7 +12,7 @@ class GCSApi:
     def __init__(self):
         cfg = Configuration.load_config()
         client = storage.Client()
-        self.bucket: Bucket = client.get_bucket(cfg.gcloud.bucket_name)
+        self.bucket: Bucket = client.get_bucket(cfg.gcloud.storage.bucket_name)
 
     def image_upload(self, picture: JpegImageFile, blob_name: str):
         pic_buffer = io.BytesIO()

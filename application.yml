@@ -1,5 +1,15 @@
 prod:
   gcloud:
-    bucket_name: "bucket_name"
-    casting_movies_table: "project_id:dataset_id.table_name"
-    casting_tv_table: "project_id:dataset_id.table_name"
+    project_name: "project_name"
+    region: "us-west1"
+
+    storage:
+      bucket_name: "bucket_name"
+
+    dataflow:
+      job_name: "job_name"
+      temp_location: "gs://bucket/temp"
+
+    big_query:
+      casting_movies_table: "project_id:dataset_id.table_name"
+      casting_tv_table: "project_id:dataset_id.table_name"

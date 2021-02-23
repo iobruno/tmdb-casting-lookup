@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Dict
 
 import apache_beam as beam
+import os
 import typer
 from apache_beam.io import BigQueryDisposition
 from apache_beam.options.pipeline_options import PipelineOptions, SetupOptions
@@ -24,6 +25,8 @@ project_root = Path(__file__).parent
 config_file = project_root.joinpath("application.yml")
 cfg = Configuration.load_config(config_file, profile="prod")
 
+bearer_token = os.environ['TMDB_API_KEY']
+
 
 @app.command("discover")
 def discover_and_fetch():
@@ -32,7 +35,7 @@ def discover_and_fetch():
 
 def fetch_and_upload_images(p: MovieDetails):
     """Production may refer to either a Movie or TVShow"""
-    image_api = ImageApi()
+    image_api = ImageApi(bearer_token)
     gcs = GCSApi()
 
     for cast in p.casting:
@@ -61,7 +64,7 @@ def fetch_and_upload_images(p: MovieDetails):
 def search_and_fetch(query: str = typer.Option(..., "-q", "--query",
                                                help="Query movies, tv shows by name")):
     logger.info(f"Querying DB for Movies and TV Show with '{query}'...")
-    search_api, movie_api, tv_api = SearchApi(), MovieApi(), TvShowApi()
+    search_api, movie_api, tv_api = SearchApi(bearer_token), MovieApi(bearer_token), TvShowApi(bearer_token)
 
     options = PipelineOptions(
         project=cfg.gcloud.project_name,
@@ -69,7 +72,9 @@ def search_and_fetch(query: str = typer.Option(..., "-q", "--query",
         job_name=cfg.gcloud.dataflow.job_name,
         temp_location=cfg.gcloud.dataflow.temp_location,
         runner="DataflowRunner",
-        max_num_workers=2)
+        max_num_workers=2,
+        setup_file=str(project_root.joinpath("setup.py"))
+    )
 
     search_results = search_api.query(query_string=query)
     movies_results = search_results.get('movie', [])

@@ -6,28 +6,13 @@ class Configuration:
     config: DictConfig = None
 
     @classmethod
-    def load_config(cls, file: str = None, profile: str = "default") -> DictConfig:
-        if cls.config:
-            return cls.config
-        else:
+    def load_config(cls, file: str = None, profile: str = "defaults") -> DictConfig:
+        if not cls.config:
             config_loader = OmegaConf.load(file)
             defaults_cfg = config_loader.get("defaults", {})
-            profile_cfg = config_loader.get(profile)
-            cls.config = OmegaConf.create(
-                cls._merge(defaults=defaults_cfg, overwrite_with=profile_cfg)
-            )
-            return cls.config
-
-    @classmethod
-    def _merge(cls, defaults: Dict, overwrite_with: Dict) -> Dict:
-        merged = dict(defaults)
-        for key, value in overwrite_with.items():
-            if key in defaults:
-                merged[key] = cls._merge(defaults[key], overwrite_with[key])
-            else:
-                return {**defaults, **overwrite_with}
-
-        return merged
+            profile_cfg = config_loader.get(profile, {})
+            cls.config = OmegaConf.merge(defaults_cfg, profile_cfg)
+        return cls.config
 
     @classmethod
     def property_value(cls, property_name: str):
